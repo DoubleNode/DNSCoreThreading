@@ -18,7 +18,7 @@ import Foundation
 //  }).run()
 //
 
-class DNSSynchronize {
+public class DNSSynchronize {
     var block:  DNSBlock?
     var object: Any?
 
