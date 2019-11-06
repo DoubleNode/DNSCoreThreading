@@ -1,0 +1,5 @@
+codecov:
+  token: eeba941a-bbe9-4ae4-9992-8769faa9b767
+  
+ignore:
+    - "Tests"  # ignore folders and all its contents
