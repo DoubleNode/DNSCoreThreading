@@ -37,7 +37,9 @@ class DNSThreadingHelper {
 
     // MARK: - run block methods
 
-    func run(_ execution: DNSThreading.Execution = .synchronously, in qos: DNSThreading.QoSClass = .current, _ block: DNSBlock?) {
+    func run(_ execution: DNSThreading.Execution = .synchronously,
+             in qos: DNSThreading.QoSClass = .current,
+             _ block: DNSBlock?) {
         let queue: DispatchQueue
 
         switch qos {
@@ -68,7 +70,9 @@ class DNSThreadingHelper {
 
     // MARK: - run after delay methods
 
-    func run(in qos: DNSThreading.QoSClass = .current, after delay: Double, _ block: DNSBlock?) -> Timer? {
+    func run(in qos: DNSThreading.QoSClass = .current,
+             after delay: Double,
+             _ block: DNSBlock?) -> Timer? {
         var timer: Timer?
 
         self.run(.synchronously, in: qos) {
@@ -82,7 +86,9 @@ class DNSThreadingHelper {
 
     // MARK: - run repeatedly after delay methods
 
-    func runRepeatedly(in qos: DNSThreading.QoSClass = .current, after delay: Double, _ block: DNSStopBlock?) -> Timer? {
+    func runRepeatedly(in qos: DNSThreading.QoSClass = .current,
+                       after delay: Double,
+                       _ block: DNSStopBlock?) -> Timer? {
         var timer: Timer?
 
         self.run(.synchronously, in: qos) {
@@ -100,7 +106,8 @@ class DNSThreadingHelper {
 
     // MARK: - run group methods
 
-    func run(group: @escaping DNSGroupBlock, then completionBlock: @escaping DNSCompletionBlock) {
+    func run(group: @escaping DNSGroupBlock,
+             then completionBlock: @escaping DNSCompletionBlock) {
         self.run(with: DispatchTime.distantFuture, block: group, then: completionBlock)
     }
 
@@ -139,7 +146,8 @@ class DNSThreadingHelper {
 
     // MARK: - thread queuing methods
 
-    func queue(for label:String, with attributes: DispatchQueue.Attributes? = .concurrent) -> DispatchQueue? {
+    func queue(for label:String,
+               with attributes: DispatchQueue.Attributes? = .concurrent) -> DispatchQueue? {
         var queue: DispatchQueue? = self.queues[label]
         if queue == nil {
             queue = DispatchQueue.init(label: label,
@@ -150,11 +158,13 @@ class DNSThreadingHelper {
         return queue
     }
 
-    func onQueue(for label:String, run block:@escaping DNSBlock) {
+    func onQueue(for label:String,
+                 run block:@escaping DNSBlock) {
         self.queue(for:label)?.async(execute: block)
     }
 
-    func onQueue(for label:String, runSynchronous block:@escaping DNSBlock) {
+    func onQueue(for label:String,
+                 runSynchronous block:@escaping DNSBlock) {
         self.queue(for:label)?.sync(execute: block)
     }
 }

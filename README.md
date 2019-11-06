@@ -7,22 +7,22 @@
 
 DNSCoreThreading is a collection of threading classes used for the DNSFramework
 
-- [Features](#features)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Dependencies](#dependencies)
-- [Credits](#credits)
-- [License](#license)
+-   [Features](#features)
+-   [Requirements](#requirements)
+-   [Installation](#installation)
+-   [Dependencies](#dependencies)
+-   [Credits](#credits)
+-   [License](#license)
 
 ## Features
 
-- [x] It's just awesome!
+-   [x] It's just awesome!
 
 ## Requirements
 
-- iOS 13.0+ / macOS 10.15+ / tvOS 13.0+ / watchOS 6.0+
-- Xcode 11.1+
-- Swift 5.1+
+-   iOS 13.0+ / macOS 10.15+ / tvOS 13.0+ / watchOS 6.0+
+-   Xcode 11.1+
+-   Swift 5.1+
 
 ## Installation
 
@@ -40,12 +40,12 @@ dependencies: [
 
 ## Dependencies
 
-- AtomicSwift v1.2.1+
+-   AtomicSwift v1.2.1+
 
 ## Credits
 
-DNSProtocols and the DNSFramework are owned and maintained by Darren Ehlers and DoubleNode.com](http://doublenode.com). You can follow them on Twitter at [@DoubleNodeOpen](https://twitter.com/DoubleNodeOpen) for project updates and releases.
+DNSCoreThreading and the DNSFramework are owned and maintained by Darren Ehlers and [DoubleNode.com](http://doublenode.com). You can follow them on Twitter at [@DoubleNodeOpen](https://twitter.com/DoubleNodeOpen) for project updates and releases.
 
 ## License
 
-DNSProtocols and the DNSFramework are Copyright © 2019 - 2016 Darren Ehlers and DoubleNode, LLC. All rights reserved.
+DNSCoreThreading and the DNSFramework are Copyright © 2019 - 2016 Darren Ehlers and DoubleNode, LLC. All rights reserved.

@@ -18,11 +18,11 @@ import Foundation
 //  }).run()
 //
 
-class DNSSynchronize {
+public class DNSSynchronize {
     var block:  DNSBlock?
     var object: Any?
 
-    required init(with object: Any? = nil, andRun block: DNSBlock? = nil) {
+    required public init(with object: Any? = nil, andRun block: DNSBlock? = nil) {
         self.object = object
         self.block  = block
     }
