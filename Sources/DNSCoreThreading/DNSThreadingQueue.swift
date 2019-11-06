@@ -1,0 +1,74 @@
+//
+//  DNSThreadingGroup.swift
+//  DNSCore
+//
+//  Created by Darren Ehlers on 8/14/19.
+//  Copyright © 2019 DoubleNode.com. All rights reserved.
+//
+
+import Foundation
+
+//
+// threadingQueue
+//
+// Example Code:
+//
+//  DNCThreadingQueue*  threadingQueue = [DNCThreadingQueue queueForLabel:@"com.queue.test"
+//                                                          withAttribute:DISPATCH_QUEUE_SERIAL];
+//
+//  [threadingQueue run:
+//   ^()
+//   {
+//   }];
+//
+
+public typealias DNSThreadingQueueBlock = (DNSThreadingQueue) -> Void
+
+public class DNSThreadingQueue {
+    var label:      String = ""
+    var queue:      DispatchQueue?
+    var attributes: DispatchQueue.Attributes?
+
+    class func queue(for label: String,
+                     with attributes: DispatchQueue.Attributes = .concurrent,
+                     run block: DNSThreadingQueueBlock? = nil) -> DNSThreadingQueue {
+        let queue = DNSThreadingQueue.init(with: label, and: attributes)
+        if block != nil {
+            queue.run(block: block!)
+        }
+        return queue
+    }
+
+    required init(with label: String = "DNSThreadingQueue", and attributes: DispatchQueue.Attributes? = .concurrent) {
+        self.label      = label
+        self.attributes = attributes
+        self.queue      = DNSThreadingHelper.shared.queue(for: self.label, with: self.attributes)
+    }
+
+    open func run(block: @escaping DNSThreadingQueueBlock) {
+        DNSThreadingHelper.shared.onQueue(for: self.label, run: {
+            block(self)
+        })
+    }
+
+    func runSynchronously(block: @escaping DNSThreadingQueueBlock) {
+        DNSThreadingHelper.shared.onQueue(for: self.label, runSynchronous: {
+            block(self)
+        })
+    }
+}
+
+class DNSSynchronousThreadingQueue: DNSThreadingQueue {
+    class func queue(for label: String,
+                     run block: DNSThreadingQueueBlock? = nil) -> DNSSynchronousThreadingQueue {
+        let queue = DNSSynchronousThreadingQueue.init(with: label, and: .initiallyInactive)
+        if block != nil {
+            queue.run(block: block!)
+        }
+        return queue
+    }
+
+    override func run(block: @escaping DNSThreadingQueueBlock) {
+        super.runSynchronously(block: block)
+    }
+}
