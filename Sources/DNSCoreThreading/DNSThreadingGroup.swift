@@ -69,7 +69,7 @@ public class DNSThreadingGroup {
     var group: DispatchGroup?
     var threads: [DNSThreadingGroupProtocol] = []
 
-    class func run(block: @escaping DNSThreadingGroupBlock,
+    class public func run(block: @escaping DNSThreadingGroupBlock,
                    then completionBlock: @escaping DNSCompletionBlock) -> DNSThreadingGroup {
         let group = DNSThreadingGroup()
         group.run(block: {
@@ -79,7 +79,7 @@ public class DNSThreadingGroup {
         return group
     }
 
-    class func run(block: @escaping DNSThreadingGroupBlock,
+    class public func run(block: @escaping DNSThreadingGroupBlock,
                    with timeout:DispatchTime,
                    then completionBlock: @escaping DNSCompletionBlock) -> DNSThreadingGroup {
         let group = DNSThreadingGroup()
@@ -90,16 +90,16 @@ public class DNSThreadingGroup {
         return group
     }
 
-    func run(_ thread: DNSThreadingGroupProtocol) {
+    public func run(_ thread: DNSThreadingGroupProtocol) {
         self.startThread()
         self.threads.append(thread)
     }
 
-    func run(block: @escaping DNSBlock, then completionBlock: @escaping DNSCompletionBlock) {
+    public func run(block: @escaping DNSBlock, then completionBlock: @escaping DNSCompletionBlock) {
         self.run(block: block, with: DispatchTime.distantFuture, then: completionBlock)
     }
 
-    func run(block: @escaping DNSBlock,
+    public func run(block: @escaping DNSBlock,
              with timeout:DispatchTime,
              then completionBlock: @escaping DNSCompletionBlock) {
         DNSThreadingHelper.shared.run(with:timeout, block: { (group: DispatchGroup) in
@@ -113,11 +113,11 @@ public class DNSThreadingGroup {
         }, then: completionBlock)
     }
 
-    func startThread() {
+    public func startThread() {
         DNSThreadingHelper.shared.enter(group: self.group)
     }
 
-    func completeThread() {
+    public func completeThread() {
         DNSThreadingHelper.shared.leave(group: self.group)
     }
 }

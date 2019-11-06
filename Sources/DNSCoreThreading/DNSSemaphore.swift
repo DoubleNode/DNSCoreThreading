@@ -9,10 +9,10 @@
 import AtomicSwift
 import Foundation
 
-class DNSSemaphore {
+public class DNSSemaphore {
     @Atomic var semaphore: DispatchSemaphore
 
-    required init(count: Int = 0) {
+    required public init(count: Int = 0) {
         semaphore = DispatchSemaphore(value: count)
     }
 
@@ -29,12 +29,12 @@ class DNSSemaphore {
     }
 }
 
-class DNSSemaphoreGate: DNSSemaphore {
-    required init() {
+public class DNSSemaphoreGate: DNSSemaphore {
+    required public init() {
         super.init(count: 0)
     }
 
-    required init(count: Int) {
+    required public init(count: Int) {
         super.init(count: count)
     }
 }

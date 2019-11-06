@@ -58,11 +58,11 @@ public class DNSThread: DNSThreadingGroupProtocol {
         return self.init(with: { (_, stop) in block(&stop) }).runRepeatedly(in: qos, after: delay)
     }
 
-    required init(with block: DNSThreadBlock? = nil) {
+    required public init(with block: DNSThreadBlock? = nil) {
         self.block = block
     }
 
-    required init(with stopBlock: DNSThreadStopBlock? = nil) {
+    required public init(with stopBlock: DNSThreadStopBlock? = nil) {
         self.stopBlock = stopBlock
     }
 
@@ -147,14 +147,14 @@ public class DNSLowThread: DNSThread {
 }
 
 public class DNSUIThread: DNSThread {
-    required init(with block: DNSUIThreadBlock? = nil) {
+    required public init(with block: DNSUIThreadBlock? = nil) {
         super.init { (thread) in
             // swiftlint:disable:next force_cast
             block?(thread as! DNSUIThread)
         }
     }
 
-    required init(with stopBlock: DNSUIThreadStopBlock? = nil) {
+    required public init(with stopBlock: DNSUIThreadStopBlock? = nil) {
         super.init { (thread, stop) in
             // swiftlint:disable:next force_cast
             stopBlock?(thread as! DNSUIThread, &stop)

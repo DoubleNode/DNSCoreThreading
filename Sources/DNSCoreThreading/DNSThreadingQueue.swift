@@ -29,7 +29,7 @@ public class DNSThreadingQueue {
     var queue:      DispatchQueue?
     var attributes: DispatchQueue.Attributes?
 
-    class func queue(for label: String,
+    public class func queue(for label: String,
                      with attributes: DispatchQueue.Attributes = .concurrent,
                      run block: DNSThreadingQueueBlock? = nil) -> DNSThreadingQueue {
         let queue = DNSThreadingQueue.init(with: label, and: attributes)
@@ -39,7 +39,7 @@ public class DNSThreadingQueue {
         return queue
     }
 
-    required init(with label: String = "DNSThreadingQueue", and attributes: DispatchQueue.Attributes? = .concurrent) {
+    required public init(with label: String = "DNSThreadingQueue", and attributes: DispatchQueue.Attributes? = .concurrent) {
         self.label      = label
         self.attributes = attributes
         self.queue      = DNSThreadingHelper.shared.queue(for: self.label, with: self.attributes)
@@ -51,15 +51,15 @@ public class DNSThreadingQueue {
         })
     }
 
-    func runSynchronously(block: @escaping DNSThreadingQueueBlock) {
+    public func runSynchronously(block: @escaping DNSThreadingQueueBlock) {
         DNSThreadingHelper.shared.onQueue(for: self.label, runSynchronous: {
             block(self)
         })
     }
 }
 
-class DNSSynchronousThreadingQueue: DNSThreadingQueue {
-    class func queue(for label: String,
+public class DNSSynchronousThreadingQueue: DNSThreadingQueue {
+    public class func queue(for label: String,
                      run block: DNSThreadingQueueBlock? = nil) -> DNSSynchronousThreadingQueue {
         let queue = DNSSynchronousThreadingQueue.init(with: label, and: .initiallyInactive)
         if block != nil {
@@ -68,7 +68,7 @@ class DNSSynchronousThreadingQueue: DNSThreadingQueue {
         return queue
     }
 
-    override func run(block: @escaping DNSThreadingQueueBlock) {
+    override public func run(block: @escaping DNSThreadingQueueBlock) {
         super.runSynchronously(block: block)
     }
 }
