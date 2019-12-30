@@ -118,13 +118,7 @@ class DNSThreadingHelper {
             let group = DispatchGroup()
             block(group)
 
-            let timeoutNS   = DispatchTime.now().uptimeNanoseconds + (timeout.uptimeNanoseconds * NSEC_PER_SEC)
-            var timeoutTime = DispatchTime(uptimeNanoseconds: timeoutNS)
-            if timeout == DispatchTime.distantFuture {
-                timeoutTime = DispatchTime.distantFuture
-            }
-
-            guard group.wait(timeout: timeoutTime) == DispatchTimeoutResult.timedOut else {
+            guard group.wait(timeout: timeout) == DispatchTimeoutResult.success else {
                 completionBlock(DNSThreadingError.groupTimeout(domain: "com.doublenode.\(type(of: self))",
                     file: "\(#file)",
                     line: "\(#line)",
