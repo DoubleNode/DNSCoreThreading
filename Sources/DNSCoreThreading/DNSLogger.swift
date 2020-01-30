@@ -9,9 +9,11 @@
 import Foundation
 import SwiftyBeaver
 
-public let dnsLog = DNSLogger().dnsLog
+public let dnsLog = DNSLogger.shared.dnsLog
 
 public class DNSLogger {
+    static public let shared = DNSLogger()
+    
     public var dnsLog = SwiftyBeaver.self
     
     required init() {
@@ -22,7 +24,7 @@ public class DNSLogger {
         //let cloud = SBPlatformDestination(appID: "foo", appSecret: "bar", encryptionKey: "123") // to cloud
 
         // use custom format and set console output to short time, log level & message
-        console.format = "$DHH:mm:ss$d $L $M"
+        console.format = "$DHH:mm:ss.SSS$d $N.$F($l) $T $L $M"
         console.asynchronously = false
         console.levelString.verbose = "💙"
         console.levelString.debug = "💚"
