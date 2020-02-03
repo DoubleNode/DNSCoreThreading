@@ -123,6 +123,24 @@ public class DNSThread: DNSThreadingGroupProtocol {
 }
 
 public class DNSHighThread: DNSThread {
+    override class func run(_ execute: DNSThreading.Execution = .synchronously,
+                            in qos: DNSThreading.QoSClass = .highBackground,
+                            block: @escaping DNSBlock) {
+        self.init(execute, in: qos, with: { (_) in block() }).run()
+    }
+
+    override class func run(in qos: DNSThreading.QoSClass = .highBackground,
+                            after delay: Double,
+                            block: @escaping DNSBlock) -> Timer? {
+        return self.init(.synchronously, in: qos, with: { (_) in block() }).run(after: delay)
+    }
+
+    override class func runRepeatedly(in qos: DNSThreading.QoSClass = .highBackground,
+                                      after delay: Double,
+                                      block: @escaping DNSStopBlock) -> Timer? {
+        return self.init(.synchronously, in: qos, with: { (_, stop) in block(&stop) }).runRepeatedly(after: delay)
+    }
+
     required public init(_ execute: DNSThreading.Execution = .synchronously,
                          in qos: DNSThreading.QoSClass = .highBackground,
                          with block: DNSThreadBlock? = nil) {
@@ -137,6 +155,24 @@ public class DNSHighThread: DNSThread {
 }
 
 public class DNSLowThread: DNSThread {
+    override class func run(_ execute: DNSThreading.Execution = .synchronously,
+                            in qos: DNSThreading.QoSClass = .lowBackground,
+                            block: @escaping DNSBlock) {
+        self.init(execute, in: qos, with: { (_) in block() }).run()
+    }
+
+    override class func run(in qos: DNSThreading.QoSClass = .lowBackground,
+                            after delay: Double,
+                            block: @escaping DNSBlock) -> Timer? {
+        return self.init(.synchronously, in: qos, with: { (_) in block() }).run(after: delay)
+    }
+
+    override class func runRepeatedly(in qos: DNSThreading.QoSClass = .lowBackground,
+                                      after delay: Double,
+                                      block: @escaping DNSStopBlock) -> Timer? {
+        return self.init(.synchronously, in: qos, with: { (_, stop) in block(&stop) }).runRepeatedly(after: delay)
+    }
+
     required public init(_ execute: DNSThreading.Execution = .synchronously,
                          in qos: DNSThreading.QoSClass = .lowBackground,
                          with block: DNSThreadBlock? = nil) {
@@ -151,6 +187,24 @@ public class DNSLowThread: DNSThread {
 }
 
 public class DNSUIThread: DNSThread {
+    override class func run(_ execute: DNSThreading.Execution = .synchronously,
+                            in qos: DNSThreading.QoSClass = .uiMain,
+                            block: @escaping DNSBlock) {
+        self.init(execute, in: qos, with: { (_) in block() }).run()
+    }
+
+    override class func run(in qos: DNSThreading.QoSClass = .uiMain,
+                            after delay: Double,
+                            block: @escaping DNSBlock) -> Timer? {
+        return self.init(.synchronously, in: qos, with: { (_) in block() }).run(after: delay)
+    }
+
+    override class func runRepeatedly(in qos: DNSThreading.QoSClass = .uiMain,
+                                      after delay: Double,
+                                      block: @escaping DNSStopBlock) -> Timer? {
+        return self.init(.synchronously, in: qos, with: { (_, stop) in block(&stop) }).runRepeatedly(after: delay)
+    }
+
     required public init(_ execute: DNSThreading.Execution = .synchronously,
                          in qos: DNSThreading.QoSClass = .uiMain,
                          with block: DNSThreadBlock? = nil) {
