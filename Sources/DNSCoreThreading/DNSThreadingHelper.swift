@@ -40,29 +40,40 @@ class DNSThreadingHelper {
     func run(_ execution: DNSThreading.Execution = .synchronously,
              in qos: DNSThreading.QoSClass = .current,
              _ block: DNSBlock?) {
+        var name = ""
         let queue: DispatchQueue
 
         switch qos {
         case .current:          queue = OperationQueue.current!.underlyingQueue!
-        case .default:          queue = DispatchQueue.global(qos: .default)
-        case .background:       queue = DispatchQueue.global(qos: .utility)
-        case .highBackground:   queue = DispatchQueue.global(qos: .userInitiated)
-        case .lowBackground:    queue = DispatchQueue.global(qos: .background)
+        case .default:          queue = DispatchQueue.global(qos: .default);        name = "DNS_\(qos)"
+        case .background:       queue = DispatchQueue.global(qos: .utility);        name = "DNS_\(qos)"
+        case .highBackground:   queue = DispatchQueue.global(qos: .userInitiated);  name = "DNS_\(qos)"
+        case .lowBackground:    queue = DispatchQueue.global(qos: .background);     name = "DNS_\(qos)"
         case .uiMain:           queue = DispatchQueue.main
         }
 
         if execution == .synchronously {
             // if running sync on current queue, just run block...(avoid deadlock)
             guard queue != OperationQueue.current?.underlyingQueue else {
+                if Thread.current.name?.isEmpty ?? true {
+                    Thread.current.name = name
+                }
                 block?()
                 return
             }
 
             queue.sync {
+                if Thread.current.name?.isEmpty ?? true {
+                    Thread.current.name = name
+                }
                 block?()
             }
         } else {
             queue.async {
+                if Thread.current.name?.isEmpty ?? true {
+                    Thread.current.name = name
+                }
+                Thread.current.name = name
                 block?()
             }
         }
