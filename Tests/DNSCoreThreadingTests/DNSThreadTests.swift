@@ -39,7 +39,7 @@ class DNSThreadTests: XCTestCase {
             threadExecuted.fulfill()
         }
 
-        wait(for: [threadExecuted], timeout: 1.1)
+        wait(for: [threadExecuted], timeout: 1.4)
     }
 
     func test_classRun_withAfterDelayAndBlock_shouldNotExecuteBeforeDelay() {
