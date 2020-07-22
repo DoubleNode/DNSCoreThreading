@@ -3,11 +3,11 @@
     "pins": [
       {
         "package": "AtomicSwift",
-        "repositoryURL": "https://github.com/MarioIannotta/AtomicSwift.git",
+        "repositoryURL": "https://github.com/DoubleNodeOpen/AtomicSwift.git",
         "state": {
           "branch": null,
-          "revision": "e2913c6e873bc60237dd138ba0db9b109016dd80",
-          "version": "1.2.1"
+          "revision": "33cc39dfb1b48898b32922b67d11a95e2bfa2e57",
+          "version": "1.2.2"
         }
       },
       {
@@ -15,8 +15,8 @@
         "repositoryURL": "https://github.com/SwiftyBeaver/SwiftyBeaver.git",
         "state": {
           "branch": null,
-          "revision": "2f2b7ac0b675e9d0ac696758f15bbff97eb65a31",
-          "version": "1.8.4"
+          "revision": "e0fb3a74cb993d7dcf1e56734cdc98ad6e6d8176",
+          "version": "1.9.1"
         }
       }
     ]
