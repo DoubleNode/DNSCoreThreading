@@ -10,10 +10,6 @@ import Foundation
 
 public typealias DNSGroupBlock = (DispatchGroup) -> Void
 
-public enum DNSThreadingError: Error {
-    case groupTimeout(domain: String, file: String, line: String, method: String)
-}
-
 public enum DNSThreading {
     public enum Execution {
         case asynchronously

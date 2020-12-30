@@ -8,7 +8,7 @@
 
 import Foundation
 
-public typealias DNSCompletionBlock = (Error?) -> Void
+public typealias DNSCompletionBlock = (DNSError?) -> Void
 public typealias DNSThreadingGroupBlock = (DNSThreadingGroup) -> Void
 
 public protocol DNSThreadingGroupProtocol: class {
