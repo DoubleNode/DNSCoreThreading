@@ -52,13 +52,13 @@ public class DNSThread: DNSThreadingGroupProtocol {
     open class func run(in qos: DNSThreading.QoSClass = .background,
                         after delay: Double,
                         block: @escaping DNSBlock) -> Timer? {
-        return self.init(.synchronously, in: qos, with: { (_) in block() }).run(after: delay)
+        return self.init(.asynchronously, in: qos, with: { (_) in block() }).run(after: delay)
     }
 
     open class func runRepeatedly(in qos: DNSThreading.QoSClass = .background,
                                   after delay: Double,
                                   block: @escaping DNSStopBlock) -> Timer? {
-        return self.init(.synchronously, in: qos, with: { (_, stop) in block(&stop) }).runRepeatedly(after: delay)
+        return self.init(.asynchronously, in: qos, with: { (_, stop) in block(&stop) }).runRepeatedly(after: delay)
     }
 
     required public init(_ execute: DNSThreading.Execution = .synchronously,
