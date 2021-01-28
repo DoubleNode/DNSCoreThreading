@@ -80,4 +80,11 @@ public class DNSLogger {
     public func consoleDestination() -> ConsoleDestination? {
         return SwiftyBeaver.destinations.first { ($0 as? ConsoleDestination) != nil } as? ConsoleDestination
     }
+
+    public func removeCloudDestination() -> Bool {
+        guard let cloudDestination = self.cloudDestination() else {
+            return false
+        }
+        return dnsLog.removeDestination(cloudDestination)
+    }
 }
