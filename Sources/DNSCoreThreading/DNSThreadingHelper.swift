@@ -87,7 +87,7 @@ class DNSThreadingHelper {
              _ block: DNSBlock?) -> Timer? {
         var timer: Timer?
 
-        self.run(.asynchronously, in: qos) {
+        self.run(.synchronously, in: qos) {
             timer = Timer.scheduledTimer(withTimeInterval:delay, repeats:false) { (_) in
                 self.run(in: qos, block)
             }
@@ -103,7 +103,7 @@ class DNSThreadingHelper {
                        _ block: DNSStopBlock?) -> Timer? {
         var timer: Timer?
 
-        self.run(.asynchronously, in: qos) {
+        self.run(.synchronously, in: qos) {
             timer = Timer.scheduledTimer(withTimeInterval:delay, repeats:true) { (timer) in
                 var stop = false
                 block?(&stop)
