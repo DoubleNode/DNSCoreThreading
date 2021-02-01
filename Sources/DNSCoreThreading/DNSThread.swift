@@ -187,7 +187,7 @@ public class DNSLowThread: DNSThread {
 }
 
 public class DNSUIThread: DNSThread {
-    override public class func run(_ execute: DNSThreading.Execution = .asynchronously,
+    override public class func run(_ execute: DNSThreading.Execution = .synchronously,
                                    in qos: DNSThreading.QoSClass = .uiMain,
                                    block: @escaping DNSBlock) {
         self.init(execute, in: qos, with: { (_) in block() }).run()
@@ -196,22 +196,22 @@ public class DNSUIThread: DNSThread {
     override public class func run(in qos: DNSThreading.QoSClass = .uiMain,
                                    after delay: Double,
                                    block: @escaping DNSBlock) -> Timer? {
-        return self.init(.asynchronously, in: qos, with: { (_) in block() }).run(after: delay)
+        return self.init(.synchronously, in: qos, with: { (_) in block() }).run(after: delay)
     }
 
     override public class func runRepeatedly(in qos: DNSThreading.QoSClass = .uiMain,
                                              after delay: Double,
                                              block: @escaping DNSStopBlock) -> Timer? {
-        return self.init(.asynchronously, in: qos, with: { (_, stop) in block(&stop) }).runRepeatedly(after: delay)
+        return self.init(.synchronously, in: qos, with: { (_, stop) in block(&stop) }).runRepeatedly(after: delay)
     }
 
-    required public init(_ execute: DNSThreading.Execution = .asynchronously,
+    required public init(_ execute: DNSThreading.Execution = .synchronously,
                          in qos: DNSThreading.QoSClass = .uiMain,
                          with block: DNSThreadBlock? = nil) {
         super.init(execute, in: qos, with: block)
     }
 
-    required public init(_ execute: DNSThreading.Execution = .asynchronously,
+    required public init(_ execute: DNSThreading.Execution = .synchronously,
                          in qos: DNSThreading.QoSClass = .uiMain,
                          with stopBlock: DNSThreadStopBlock? = nil) {
         super.init(execute, in: qos, with: stopBlock)
