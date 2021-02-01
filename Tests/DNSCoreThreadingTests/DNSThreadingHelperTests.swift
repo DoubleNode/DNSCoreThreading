@@ -39,7 +39,7 @@ class DNSThreadingHelperTests: XCTestCase {
     func test_run_withSynchronouslyInBackgroundAndBlock_shouldExecuteImmediately() {
         let threadExecuted = expectation(description: "Thread executes")
 
-        sut.run(.synchronously, in: .highBackground) {
+        sut.run(.asynchronously, in: .highBackground) {
             threadExecuted.fulfill()
         }
 

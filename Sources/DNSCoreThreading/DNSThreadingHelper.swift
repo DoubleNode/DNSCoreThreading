@@ -30,25 +30,29 @@ class DNSThreadingHelper {
     static let shared = DNSThreadingHelper()
 
     var queues: [String: DispatchQueue] = [:]
+    var threadIndex: Int = 0
 
     // MARK: - run block methods
 
-    func run(_ execution: DNSThreading.Execution = .synchronously,
+    func run(_ execution: DNSThreading.Execution = .asynchronously,
              in qos: DNSThreading.QoSClass = .current,
              _ block: DNSBlock?) {
         var name = ""
         let queue: DispatchQueue
 
+        self.threadIndex += 1
+        
         switch qos {
         case .current:          queue = OperationQueue.current!.underlyingQueue!
-        case .default:          queue = DispatchQueue.global(qos: .default);        name = "DNS_\(qos)"
-        case .background:       queue = DispatchQueue.global(qos: .utility);        name = "DNS_\(qos)"
-        case .highBackground:   queue = DispatchQueue.global(qos: .userInitiated);  name = "DNS_\(qos)"
-        case .lowBackground:    queue = DispatchQueue.global(qos: .background);     name = "DNS_\(qos)"
-        case .uiMain:           queue = DispatchQueue.main
+        case .default:          queue = DispatchQueue.global(qos: .default);        name = "DNS\(self.threadIndex)DEF"
+        case .background:       queue = DispatchQueue.global(qos: .utility);        name = "DNS\(self.threadIndex)BACK"
+        case .highBackground:   queue = DispatchQueue.global(qos: .userInitiated);  name = "DNS\(self.threadIndex)HIBK"
+        case .lowBackground:    queue = DispatchQueue.global(qos: .background);     name = "DNS\(self.threadIndex)LOBK"
+        case .uiMain:           queue = DispatchQueue.main;                         name = "DNS\(self.threadIndex)UIMAIN"
         }
 
-        if execution == .synchronously {
+        if execution == .asynchronously {
+            name = name + "_SYNC"
             // if running sync on current queue, just run block...(avoid deadlock)
             guard queue != OperationQueue.current?.underlyingQueue else {
                 if Thread.current.name?.isEmpty ?? true {
@@ -65,6 +69,7 @@ class DNSThreadingHelper {
                 block?()
             }
         } else {
+            name = name + "_ASYNC"
             queue.async {
                 if Thread.current.name?.isEmpty ?? true {
                     Thread.current.name = name
@@ -82,7 +87,7 @@ class DNSThreadingHelper {
              _ block: DNSBlock?) -> Timer? {
         var timer: Timer?
 
-        self.run(.synchronously, in: qos) {
+        self.run(.asynchronously, in: qos) {
             timer = Timer.scheduledTimer(withTimeInterval:delay, repeats:false) { (_) in
                 self.run(in: qos, block)
             }
@@ -98,7 +103,7 @@ class DNSThreadingHelper {
                        _ block: DNSStopBlock?) -> Timer? {
         var timer: Timer?
 
-        self.run(.synchronously, in: qos) {
+        self.run(.asynchronously, in: qos) {
             timer = Timer.scheduledTimer(withTimeInterval:delay, repeats:true) { (timer) in
                 var stop = false
                 block?(&stop)
