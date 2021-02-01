@@ -51,7 +51,7 @@ class DNSThreadingHelper {
         case .uiMain:           queue = DispatchQueue.main;                         name = "DNS\(self.threadIndex)UIMAIN"
         }
 
-        if execution == .asynchronously {
+        if execution == .synchronously {
             name = name + "_SYNC"
             // if running sync on current queue, just run block...(avoid deadlock)
             guard queue != OperationQueue.current?.underlyingQueue else {
