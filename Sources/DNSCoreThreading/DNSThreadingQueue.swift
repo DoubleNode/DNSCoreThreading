@@ -45,7 +45,7 @@ public class DNSThreadingQueue: Equatable {
     }
 
     public var label: String = ""
-    public var queue: DispatchQueue?
+    public var queue: DispatchQueue
     public var attributes: DispatchQueue.Attributes?
 
     public class func queue(for label: String,
@@ -82,10 +82,10 @@ public class DNSThreadingQueue: Equatable {
     }
     
     public func sync(execute block: () -> Void) {
-        self.queue?.sync(execute: block)
+        self.queue.sync(execute: block)
     }
     public func async(group: DispatchGroup? = nil, qos: DispatchQoS = .unspecified, flags: DispatchWorkItemFlags = [], execute work: @escaping @convention(block) () -> Void) {
-        self.queue?.async(execute: work)
+        self.queue.async(execute: work)
     }
 
     // MARK: - Equatable protocol methods -

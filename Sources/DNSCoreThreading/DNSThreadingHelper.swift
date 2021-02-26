@@ -154,24 +154,25 @@ class DNSThreadingHelper {
     // MARK: - thread queuing methods
 
     func queue(for label:String,
-               with attributes: DispatchQueue.Attributes? = .concurrent) -> DispatchQueue? {
+               with attributes: DispatchQueue.Attributes? = .concurrent) -> DispatchQueue {
         var queue: DispatchQueue? = self.queues[label]
-        if queue == nil {
-            queue = DispatchQueue.init(label: label,
-                                       attributes: attributes ?? .concurrent,
-                                       autoreleaseFrequency: .workItem)
-            self.queues[label] = queue
+        guard queue == nil else {
+            return queue!
         }
-        return queue
+        queue = DispatchQueue.init(label: label,
+                                   attributes: attributes ?? .concurrent,
+                                   autoreleaseFrequency: .workItem)
+        self.queues[label] = queue
+        return queue!
     }
 
     func onQueue(for label:String,
                  run block:@escaping DNSBlock) {
-        self.queue(for:label)?.async(execute: block)
+        self.queue(for:label).async(execute: block)
     }
 
     func onQueue(for label:String,
                  runSynchronous block:@escaping DNSBlock) {
-        self.queue(for:label)?.sync(execute: block)
+        self.queue(for:label).sync(execute: block)
     }
 }
