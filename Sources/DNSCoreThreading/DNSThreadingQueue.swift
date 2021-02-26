@@ -25,6 +25,25 @@ import Foundation
 public typealias DNSThreadingQueueBlock = (DNSThreadingQueue) -> Void
 
 public class DNSThreadingQueue: Equatable {
+    class var currentQueue: DNSThreadingQueue {
+        return DNSThreadingQueue.init(with: OperationQueue.current!.underlyingQueue!)
+    }
+    class var defaultQueue: DNSThreadingQueue {
+        return DNSThreadingQueue.init(with: DispatchQueue.global(qos: .default))
+    }
+    class var backgroundQueue: DNSThreadingQueue {
+        return DNSThreadingQueue.init(with: DispatchQueue.global(qos: .utility))
+    }
+    class var highBackgroundQueue: DNSThreadingQueue {
+        return DNSThreadingQueue.init(with: DispatchQueue.global(qos: .userInitiated))
+    }
+    class var lowBackgroundQueue: DNSThreadingQueue {
+        return DNSThreadingQueue.init(with: DispatchQueue.global(qos: .background))
+    }
+    class var uiMainQueue: DNSThreadingQueue {
+        return DNSThreadingQueue.init(with: DispatchQueue.main)
+    }
+
     var label:      String = ""
     var queue:      DispatchQueue?
     var attributes: DispatchQueue.Attributes?

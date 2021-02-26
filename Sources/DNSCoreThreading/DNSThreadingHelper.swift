@@ -39,17 +39,17 @@ class DNSThreadingHelper {
              _ block: DNSBlock?) {
         var name = ""
         let queue: DNSThreadingQueue
-        let currentQueue = DNSThreadingQueue.init(with: OperationQueue.current!.underlyingQueue!)
+        let currentQueue = DNSThreadingQueue.currentQueue
         
         self.threadIndex += 1
         
         switch qos {
         case .current:          queue = currentQueue
-        case .default:          queue = DNSThreadingQueue.init(with: DispatchQueue.global(qos: .default));      name = "DNS\(self.threadIndex)DEF"
-        case .background:       queue = DNSThreadingQueue.init(with: DispatchQueue.global(qos: .utility));      name = "DNS\(self.threadIndex)BACK"
-        case .highBackground:   queue = DNSThreadingQueue.init(with: DispatchQueue.global(qos: .userInitiated));name = "DNS\(self.threadIndex)HIBK"
-        case .lowBackground:    queue = DNSThreadingQueue.init(with: DispatchQueue.global(qos: .background));   name = "DNS\(self.threadIndex)LOBK"
-        case .uiMain:           queue = DNSThreadingQueue.init(with: DispatchQueue.main);                       name = "DNS\(self.threadIndex)UIMAIN"
+        case .default:          queue = DNSThreadingQueue.defaultQueue;         name = "DNS\(self.threadIndex)DEF"
+        case .background:       queue = DNSThreadingQueue.backgroundQueue;      name = "DNS\(self.threadIndex)BACK"
+        case .highBackground:   queue = DNSThreadingQueue.highBackgroundQueue;  name = "DNS\(self.threadIndex)HIBK"
+        case .lowBackground:    queue = DNSThreadingQueue.lowBackgroundQueue;   name = "DNS\(self.threadIndex)LOBK"
+        case .uiMain:           queue = DNSThreadingQueue.uiMainQueue;          name = "DNS\(self.threadIndex)UIMAIN"
         }
 
         if execution == .synchronously {
