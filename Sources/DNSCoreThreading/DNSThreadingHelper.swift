@@ -39,12 +39,11 @@ class DNSThreadingHelper {
              _ block: DNSBlock?) {
         var name = ""
         let queue: DNSThreadingQueue
-        let currentQueue = DNSThreadingQueue.currentQueue
         
         self.threadIndex += 1
         
         switch qos {
-        case .current:          queue = currentQueue
+        case .current:          queue = DNSThreadingQueue.currentQueue
         case .default:          queue = DNSThreadingQueue.defaultQueue;         name = "DNS\(self.threadIndex)DEF"
         case .background:       queue = DNSThreadingQueue.backgroundQueue;      name = "DNS\(self.threadIndex)BACK"
         case .highBackground:   queue = DNSThreadingQueue.highBackgroundQueue;  name = "DNS\(self.threadIndex)HIBK"
@@ -55,7 +54,7 @@ class DNSThreadingHelper {
         if execution == .synchronously {
             name = name + "_SYNC"
             // if running sync on current queue, just run block...(avoid deadlock)
-            guard queue != currentQueue else {
+            guard queue != DNSThreadingQueue.currentQueue else {
                 if Thread.current.name?.isEmpty ?? true {
                     Thread.current.name = name
                 }

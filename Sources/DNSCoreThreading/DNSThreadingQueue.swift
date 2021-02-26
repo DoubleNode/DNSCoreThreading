@@ -26,7 +26,10 @@ public typealias DNSThreadingQueueBlock = (DNSThreadingQueue) -> Void
 
 public class DNSThreadingQueue: Equatable {
     public class var currentQueue: DNSThreadingQueue {
-        return DNSThreadingQueue.init(with: OperationQueue.current!.underlyingQueue!)
+        guard let queue = OperationQueue.current?.underlyingQueue else {
+            return defaultQueue
+        }
+        return DNSThreadingQueue.init(with: queue)
     }
     public class var defaultQueue: DNSThreadingQueue {
         return DNSThreadingQueue.init(with: DispatchQueue.global(qos: .default))
