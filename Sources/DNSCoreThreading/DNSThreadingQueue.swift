@@ -24,7 +24,7 @@ import Foundation
 
 public typealias DNSThreadingQueueBlock = (DNSThreadingQueue) -> Void
 
-public class DNSThreadingQueue {
+public class DNSThreadingQueue: Equatable {
     var label:      String = ""
     var queue:      DispatchQueue?
     var attributes: DispatchQueue.Attributes?
@@ -45,6 +45,10 @@ public class DNSThreadingQueue {
         self.attributes = attributes
         self.queue      = DNSThreadingHelper.shared.queue(for: self.label, with: self.attributes)
     }
+    required public init(with queue: DispatchQueue) {
+        self.label  = queue.label
+        self.queue  = queue
+    }
 
     open func run(block: @escaping DNSThreadingQueueBlock) {
         DNSThreadingHelper.shared.onQueue(for: self.label, run: {
@@ -56,6 +60,19 @@ public class DNSThreadingQueue {
         DNSThreadingHelper.shared.onQueue(for: self.label, runSynchronous: {
             block(self)
         })
+    }
+    
+    public func sync(execute block: () -> Void) {
+        self.queue?.sync(execute: block)
+    }
+    public func async(group: DispatchGroup? = nil, qos: DispatchQoS = .unspecified, flags: DispatchWorkItemFlags = [], execute work: @escaping @convention(block) () -> Void) {
+        self.queue?.async(execute: work)
+    }
+
+    // MARK: - Equatable protocol methods -
+
+    static public func == (lhs: DNSThreadingQueue, rhs: DNSThreadingQueue) -> Bool {
+        return lhs.queue == rhs.queue
     }
 }
 

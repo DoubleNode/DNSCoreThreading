@@ -38,23 +38,24 @@ class DNSThreadingHelper {
              in qos: DNSThreading.QoSClass = .current,
              _ block: DNSBlock?) {
         var name = ""
-        let queue: DispatchQueue
-
+        let queue: DNSThreadingQueue
+        let currentQueue = DNSThreadingQueue.init(with: OperationQueue.current!.underlyingQueue!)
+        
         self.threadIndex += 1
         
         switch qos {
-        case .current:          queue = OperationQueue.current!.underlyingQueue!
-        case .default:          queue = DispatchQueue.global(qos: .default);        name = "DNS\(self.threadIndex)DEF"
-        case .background:       queue = DispatchQueue.global(qos: .utility);        name = "DNS\(self.threadIndex)BACK"
-        case .highBackground:   queue = DispatchQueue.global(qos: .userInitiated);  name = "DNS\(self.threadIndex)HIBK"
-        case .lowBackground:    queue = DispatchQueue.global(qos: .background);     name = "DNS\(self.threadIndex)LOBK"
-        case .uiMain:           queue = DispatchQueue.main;                         name = "DNS\(self.threadIndex)UIMAIN"
+        case .current:          queue = currentQueue
+        case .default:          queue = DNSThreadingQueue.init(with: DispatchQueue.global(qos: .default));      name = "DNS\(self.threadIndex)DEF"
+        case .background:       queue = DNSThreadingQueue.init(with: DispatchQueue.global(qos: .utility));      name = "DNS\(self.threadIndex)BACK"
+        case .highBackground:   queue = DNSThreadingQueue.init(with: DispatchQueue.global(qos: .userInitiated));name = "DNS\(self.threadIndex)HIBK"
+        case .lowBackground:    queue = DNSThreadingQueue.init(with: DispatchQueue.global(qos: .background));   name = "DNS\(self.threadIndex)LOBK"
+        case .uiMain:           queue = DNSThreadingQueue.init(with: DispatchQueue.main);                       name = "DNS\(self.threadIndex)UIMAIN"
         }
 
         if execution == .synchronously {
             name = name + "_SYNC"
             // if running sync on current queue, just run block...(avoid deadlock)
-            guard queue != OperationQueue.current?.underlyingQueue else {
+            guard queue != currentQueue else {
                 if Thread.current.name?.isEmpty ?? true {
                     Thread.current.name = name
                 }
