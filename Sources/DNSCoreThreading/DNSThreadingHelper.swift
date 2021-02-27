@@ -6,6 +6,7 @@
 //  Copyright © 2020 - 2016 DoubleNode.com. All rights reserved.
 //
 
+import DNSError
 import Foundation
 
 public typealias DNSGroupBlock = (DispatchGroup) -> Void
@@ -131,10 +132,7 @@ class DNSThreadingHelper {
             block(group)
 
             guard group.wait(timeout: timeout) == DispatchTimeoutResult.success else {
-                completionBlock(DNSThreadingError.groupTimeout(domain: "com.doublenode.\(type(of: self))",
-                    file: "\(#file)",
-                    line: "\(#line)",
-                    method: "\(#function)"))
+                completionBlock(DNSThreadingError.groupTimeout(DNSCodeLocation(self, "\(#file),\(#line),\(#function)")))
                 return
             }
 

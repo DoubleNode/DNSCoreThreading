@@ -6,10 +6,11 @@
 //  Copyright © 2020 - 2016 DoubleNode.com. All rights reserved.
 //
 
+import DNSError
 import Foundation
 
 public enum DNSThreadingError: Error {
-    case groupTimeout(domain: String, file: String, line: String, method: String)
+    case groupTimeout(_ codeLocation: CodeLocation)
 }
 extension DNSThreadingError: DNSError {
     public static let domain = "DNSTHREADING"
@@ -20,9 +21,10 @@ extension DNSThreadingError: DNSError {
     
     public var nsError: NSError! {
         switch self {
-        case .groupTimeout(let domain, let file, let line, let method):
+        case .groupTimeout(let codeLocation):
             let userInfo: [String : Any] = [
-                "DNSDomain": domain, "DNSFile": file, "DNSLine": line, "DNSMethod": method,
+                "DNSDomain": codeLocation.domain, "DNSFile": codeLocation.file,
+                "DNSLine": codeLocation.line, "DNSMethod": codeLocation.method,
                 NSLocalizedDescriptionKey: self.errorDescription ?? "Group Timeout Error"
             ]
             return NSError.init(domain: Self.domain,
@@ -39,8 +41,8 @@ extension DNSThreadingError: DNSError {
     }
     public var failureReason: String? {
         switch self {
-        case .groupTimeout(let domain, let file, let line, let method):
-            return "\(domain):\(file):\(line):\(method)"
+        case .groupTimeout(let codeLocation):
+            return codeLocation.failureReason
         }
     }
 }

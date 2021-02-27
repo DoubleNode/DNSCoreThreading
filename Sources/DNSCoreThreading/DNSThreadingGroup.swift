@@ -6,6 +6,7 @@
 //  Copyright © 2020 - 2016 DoubleNode.com. All rights reserved.
 //
 
+import DNSError
 import Foundation
 
 public typealias DNSCompletionBlock = (DNSError?) -> Void
