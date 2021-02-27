@@ -41,7 +41,7 @@ dependencies: [
 ## Dependencies
 
 -   AtomicSwift v1.2.1+
--   DNSError v1.3.0+
+-   DNSError v1.4.0+
 
 ## Credits
 
