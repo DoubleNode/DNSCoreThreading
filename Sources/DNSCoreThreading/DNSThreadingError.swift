@@ -22,17 +22,17 @@ extension DNSThreadingError: DNSError {
     public var nsError: NSError! {
         switch self {
         case .groupTimeout(let codeLocation):
-            let userInfo: [String : Any] = [
-                "DNSDomain": codeLocation.domain, "DNSFile": codeLocation.file,
-                "DNSLine": codeLocation.line, "DNSMethod": codeLocation.method,
-                NSLocalizedDescriptionKey: self.errorDescription ?? "Group Timeout Error"
-            ]
+            var userInfo = codeLocation.userInfo
+            userInfo[NSLocalizedDescriptionKey] = self.errorString
             return NSError.init(domain: Self.domain,
                                 code: Self.Code.groupTimeout.rawValue,
                                 userInfo: userInfo)
         }
     }
     public var errorDescription: String? {
+        return self.errorString
+    }
+    public var errorString: String {
         switch self {
         case .groupTimeout:
             return NSLocalizedString("DNSTHREADING-Group Timeout Error", comment: "")
