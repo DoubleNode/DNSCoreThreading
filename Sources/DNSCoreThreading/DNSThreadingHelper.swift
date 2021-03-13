@@ -6,6 +6,7 @@
 //  Copyright © 2020 - 2016 DoubleNode.com. All rights reserved.
 //
 
+import AtomicSwift
 import DNSError
 import Foundation
 
@@ -30,6 +31,7 @@ public enum DNSThreading {
 class DNSThreadingHelper {
     static let shared = DNSThreadingHelper()
 
+    @Atomic
     var queues: [String: DispatchQueue] = [:]
     var threadIndex: Int = 0
 
