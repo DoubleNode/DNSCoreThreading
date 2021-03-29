@@ -46,8 +46,8 @@ extension DNSThreadingError: DNSError {
             return String(format: NSLocalizedString("DNSTHREADING-Unknown Error%@", comment: ""),
                           " (\(Self.domain):\(Self.Code.unknown.rawValue))")
         case .groupTimeout:
-            return NSLocalizedString("DNSTHREADING-Group Timeout Error", comment: "")
-                + " (\(Self.domain):\(Self.Code.groupTimeout.rawValue))"
+            return String(format: NSLocalizedString("DNSTHREADING-Group Timeout Error%@", comment: ""),
+                          " (\(Self.domain):\(Self.Code.groupTimeout.rawValue))")
         }
     }
     public var failureReason: String? {
