@@ -29,9 +29,10 @@ public class DNSSynchronize {
 
     public func run() {
         if Thread.isMainThread {
-            NSException.init(name: NSExceptionName(rawValue: "\(type(of: self)) Exception"),
-                             reason: "In Main Thread",
-                             userInfo: [ "FILE": "\(#file)", "LINE": "\(#line)", "FUNCTION": "\(#function)" ]).raise()
+            let codeLocation = DNSCoreThreadingCodeLocation(self, "\(#file),\(#line),\(#function)")
+            NSException.init(name: NSExceptionName("\(type(of: self)) Exception"),
+                             reason: "In Main Thread", userInfo: codeLocation.userInfo)
+                .raise()
         }
 
         objc_sync_enter(self.object ?? self)
