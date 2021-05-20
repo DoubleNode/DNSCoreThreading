@@ -12,7 +12,7 @@ import Foundation
 public typealias DNSCompletionBlock = (DNSError?) -> Void
 public typealias DNSThreadingGroupBlock = (DNSThreadingGroup) -> Void
 
-public protocol DNSThreadingGroupProtocol: class {
+public protocol DNSThreadingGroupProtocol: AnyObject {
     func run(in group: DNSThreadingGroup)
     func done()
 }
