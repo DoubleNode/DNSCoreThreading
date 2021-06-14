@@ -70,6 +70,7 @@ public class DNSThreadingGroup {
     var group: DispatchGroup?
     var threads: [DNSThreadingGroupProtocol] = []
 
+    @discardableResult
     class public func run(block: @escaping DNSThreadingGroupBlock,
                           then completionBlock: @escaping DNSCompletionBlock) -> DNSThreadingGroup {
         let group = DNSThreadingGroup()
@@ -80,6 +81,7 @@ public class DNSThreadingGroup {
         return group
     }
 
+    @discardableResult
     class public func run(block: @escaping DNSThreadingGroupBlock,
                           with timeout:DispatchTime,
                           then completionBlock: @escaping DNSCompletionBlock) -> DNSThreadingGroup {

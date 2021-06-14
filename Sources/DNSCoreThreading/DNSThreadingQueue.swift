@@ -51,6 +51,7 @@ public class DNSThreadingQueue: Equatable {
     public var queue: DispatchQueue
     public var attributes: DispatchQueue.Attributes?
 
+    @discardableResult
     public class func queue(for label: String,
                             with attributes: DispatchQueue.Attributes = .concurrent,
                             run block: DNSThreadingQueueBlock? = nil) -> DNSThreadingQueue {
@@ -99,6 +100,7 @@ public class DNSThreadingQueue: Equatable {
 }
 
 public class DNSSynchronousThreadingQueue: DNSThreadingQueue {
+    @discardableResult
     public class func queue(for label: String,
                             run block: DNSThreadingQueueBlock? = nil) -> DNSSynchronousThreadingQueue {
         let queue = DNSSynchronousThreadingQueue.init(with: label, and: .initiallyInactive)
