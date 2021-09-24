@@ -8,6 +8,9 @@
 
 import DNSError
 
+public extension DNSCodeLocation {
+    typealias coreThreading = DNSCoreThreadingCodeLocation
+}
 open class DNSCoreThreadingCodeLocation: DNSCodeLocation {
     override open class var domainPreface: String { "com.doublenode.coreThreading." }
 }

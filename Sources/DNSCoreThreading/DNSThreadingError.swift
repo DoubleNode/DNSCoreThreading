@@ -9,11 +9,13 @@
 import DNSError
 import Foundation
 
-public enum DNSThreadingError: Error {
+public extension DNSError {
+    typealias CoreThreading = DNSCoreThreadingError
+}
+public enum DNSCoreThreadingError: DNSError {
     case unknown(_ codeLocation: DNSCodeLocation)
     case groupTimeout(_ codeLocation: DNSCodeLocation)
-}
-extension DNSThreadingError: DNSError {
+
     public static let domain = "DNSTHREADING"
     public enum Code: Int
     {
