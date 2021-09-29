@@ -9,7 +9,7 @@
 import DNSError
 import Foundation
 
-public typealias DNSCompletionBlock = (LocalizedError?) -> Void
+public typealias DNSCompletionBlock = (DNSError?) -> Void
 public typealias DNSThreadingGroupBlock = (DNSThreadingGroup) -> Void
 
 public protocol DNSThreadingGroupProtocol: AnyObject {
