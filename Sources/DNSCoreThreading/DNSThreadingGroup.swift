@@ -67,13 +67,23 @@ public protocol DNSThreadingGroupProtocol: AnyObject {
 //
 
 public class DNSThreadingGroup {
+    public var name: String = ""
+
+    var count: Int {
+        guard let group = self.group else { return -2 }
+        return group.debugDescription.components(separatedBy: ",")
+            .filter({$0.contains("count")})
+            .first?.components(separatedBy: CharacterSet.decimalDigits.inverted)
+            .compactMap{Int($0)}.first ?? -1
+    }
     var group: DispatchGroup?
     var threads: [DNSThreadingGroupProtocol] = []
 
     @discardableResult
-    class public func run(block: @escaping DNSThreadingGroupBlock,
+    class public func run(_ name: String = "",
+                          block: @escaping DNSThreadingGroupBlock,
                           then completionBlock: @escaping DNSCompletionBlock) -> DNSThreadingGroup {
-        let group = DNSThreadingGroup()
+        let group = DNSThreadingGroup(name)
         group.run(block: {
             block(group)
         }, then: completionBlock)
@@ -82,10 +92,11 @@ public class DNSThreadingGroup {
     }
 
     @discardableResult
-    class public func run(block: @escaping DNSThreadingGroupBlock,
+    class public func run(_ name: String = "",
+                          block: @escaping DNSThreadingGroupBlock,
                           with timeout:DispatchTime,
                           then completionBlock: @escaping DNSCompletionBlock) -> DNSThreadingGroup {
-        let group = DNSThreadingGroup()
+        let group = DNSThreadingGroup(name)
         group.run(block: {
             block(group)
         }, with: timeout, then: completionBlock)
@@ -93,6 +104,9 @@ public class DNSThreadingGroup {
         return group
     }
 
+    required init(_ name: String = "") {
+        self.name = name.isEmpty ? String.dnsRandom() : name
+    }
     public func run(_ thread: DNSThreadingGroupProtocol) {
         self.startThread()
         self.threads.append(thread)
@@ -118,10 +132,27 @@ public class DNSThreadingGroup {
     }
 
     public func startThread() {
-        DNSThreadingHelper.shared.enter(group: self.group)
+        guard let group = self.group else {
+            print("***** startThread: DispatchGroup(\(name)) Error: nil group *****")
+            return
+        }
+        DNSThreadingHelper.shared.enter(group: group)
+        print("***** startThread: DispatchGroup(\(name)) count = \(count) *****")
     }
-
     public func completeThread() {
-        DNSThreadingHelper.shared.leave(group: self.group)
+        guard let group = self.group else {
+            print("***** completeThread: DispatchGroup(\(name)) Error: nil group *****")
+            return
+        }
+        print("***** completeThread: DispatchGroup(\(name)) count = \(count) *****")
+        DNSThreadingHelper.shared.leave(group: group)
+    }
+}
+
+extension String {
+    @discardableResult
+    static public func dnsRandom(_ n: Int = 16) -> String {
+        let digits = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+        return String(Array(0..<n).map { _ in digits.randomElement()! })
     }
 }

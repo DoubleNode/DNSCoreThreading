@@ -132,7 +132,12 @@ public class DNSThread: DNSThreadingGroupProtocol {
     }
 
     public func done() {
+        guard group != nil else {
+            print("***** Thread.done group == nil error *****")
+            return
+        }
         group?.completeThread()
+        group = nil
     }
 }
 

@@ -125,7 +125,6 @@ class DNSThreadingHelper {
              then completionBlock: @escaping DNSCompletionBlock) {
         self.run(with: DispatchTime.distantFuture, block: group, then: completionBlock)
     }
-
     func run(with timeout: DispatchTime,
              block: @escaping DNSGroupBlock,
              then completionBlock: @escaping DNSCompletionBlock) {
@@ -142,17 +141,11 @@ class DNSThreadingHelper {
             completionBlock(nil)
         }
     }
-
-    func enter(group: DispatchGroup?) {
-        group?.enter()
+    func enter(group: DispatchGroup) {
+        group.enter()
     }
-
-    func leave(group: DispatchGroup?) {
-        let count = group?.debugDescription.components(separatedBy: ",").filter({$0.contains("count")}).first?.components(separatedBy: CharacterSet.decimalDigits.inverted).compactMap{Int($0)}.first ?? 0
-        if count <= 0 {
-            print("***** DispatchGroup count error *****")
-        }
-        group?.leave()
+    func leave(group: DispatchGroup) {
+        group.leave()
     }
 
     // MARK: - thread queuing methods
