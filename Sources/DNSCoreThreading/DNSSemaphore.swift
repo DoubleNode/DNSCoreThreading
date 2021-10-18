@@ -12,7 +12,7 @@ import Foundation
 public class DNSSemaphore {
     @Atomic var semaphore: DispatchSemaphore
 
-    required public init(count: Int = 1) {
+    required public init(count: Int = 0) {
         semaphore = DispatchSemaphore(value: count)
     }
 
@@ -32,6 +32,9 @@ public class DNSSemaphore {
     }
 }
 public class DNSSemaphoreGate: DNSSemaphore {
+    required public init() {
+        super.init(count: 0)
+    }
     required public init(count: Int = 1) {
         super.init(count: count)
     }
