@@ -132,19 +132,11 @@ public class DNSThreadingGroup {
     }
 
     public func startThread() {
-        guard let group = self.group else {
-            print("***** startThread: DispatchGroup(\(name)) Error: nil group *****")
-            return
-        }
+        guard let group = self.group else { return }
         DNSThreadingHelper.shared.enter(group: group)
-        print("***** startThread: DispatchGroup(\(name)) count = \(count) *****")
     }
     public func completeThread() {
-        guard let group = self.group else {
-            print("***** completeThread: DispatchGroup(\(name)) Error: nil group *****")
-            return
-        }
-        print("***** completeThread: DispatchGroup(\(name)) count = \(count) *****")
+        guard let group = self.group else { return }
         DNSThreadingHelper.shared.leave(group: group)
     }
 }
