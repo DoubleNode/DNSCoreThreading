@@ -148,6 +148,10 @@ class DNSThreadingHelper {
     }
 
     func leave(group: DispatchGroup?) {
+        let count = group?.debugDescription.components(separatedBy: ",").filter({$0.contains("count")}).first?.components(separatedBy: CharacterSet.decimalDigits.inverted).compactMap{Int($0)}.first ?? 0
+        if count <= 0 {
+            print("***** DispatchGroup count error *****")
+        }
         group?.leave()
     }
 
