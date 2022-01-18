@@ -83,25 +83,28 @@ public class DNSThreadingGroup {
     class public func run(_ name: String = "",
                           block: @escaping DNSThreadingGroupBlock,
                           then completionBlock: @escaping DNSCompletionBlock) -> DNSThreadingGroup {
-        let group = DNSThreadingGroup(name)
-        group.run(block: {
-            block(group)
+        let threadingGroup = DNSThreadingGroup(name)
+        threadingGroup.run(block: {
+            threadingGroup.run(DNSLowThread.init(.asynchronously) { (thread) in
+                block(threadingGroup)
+                thread.done()
+            })
         }, then: completionBlock)
-
-        return group
+        return threadingGroup
     }
-
     @discardableResult
     class public func run(_ name: String = "",
                           block: @escaping DNSThreadingGroupBlock,
                           with timeout:DispatchTime,
                           then completionBlock: @escaping DNSCompletionBlock) -> DNSThreadingGroup {
-        let group = DNSThreadingGroup(name)
-        group.run(block: {
-            block(group)
+        let threadingGroup = DNSThreadingGroup(name)
+        threadingGroup.run(block: {
+            threadingGroup.run(DNSLowThread.init(.asynchronously) { (thread) in
+                block(threadingGroup)
+                thread.done()
+            })
         }, with: timeout, then: completionBlock)
-
-        return group
+        return threadingGroup
     }
 
     required init(_ name: String = "") {
@@ -121,8 +124,8 @@ public class DNSThreadingGroup {
                     with timeout:DispatchTime,
                     then completionBlock: @escaping DNSCompletionBlock) {
         DNSThreadingHelper.shared.run(with:timeout, block: { (group: DispatchGroup) in
-            self.group      = group
-            self.threads    = []
+            self.group = group
+            self.threads = []
             block()
 
             for thread: DNSThreadingGroupProtocol in self.threads {
