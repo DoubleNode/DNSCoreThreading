@@ -100,10 +100,6 @@ public class DNSThreadingGroup {
         let threadingGroup = DNSThreadingGroup(name)
         threadingGroup.run(block: {
             block(threadingGroup)
-//            threadingGroup.run(DNSLowThread.init(.asynchronously) { (thread) in
-//                block(threadingGroup)
-//                thread.done()
-//            })
         }, with: timeout, then: completionBlock)
         return threadingGroup
     }
