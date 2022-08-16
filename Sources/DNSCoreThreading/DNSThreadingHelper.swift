@@ -134,7 +134,7 @@ class DNSThreadingHelper {
 
             guard group.wait(timeout: timeout) == DispatchTimeoutResult.success else {
                 completionBlock(DNSError.CoreThreading
-                                    .groupTimeout(DNSCodeLocation.coreThreading(self, "\(#file),\(#line),\(#function)")))
+                    .groupTimeout(.coreThreading(self)))
                 return
             }
 
