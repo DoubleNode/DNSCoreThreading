@@ -9,6 +9,7 @@
 import Foundation
 
 public typealias DNSBlock = () -> Void
+public typealias DNSStringBlock = (String) -> Void
 public typealias DNSStopBlock = (inout Bool) -> Void
 public typealias DNSThreadBlock = (DNSThread) -> Void
 public typealias DNSThreadStopBlock = (DNSThread, inout Bool) -> Void
