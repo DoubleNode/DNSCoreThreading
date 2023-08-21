@@ -20,9 +20,9 @@ DNSCoreThreading is a collection of threading classes used for the DNSFramework
 
 ## Requirements
 
--   iOS 13.0+ / macOS 10.15+ / tvOS 13.0+ / watchOS 6.0+
--   Xcode 11.6+
--   Swift 5.1+
+-   iOS 16.0+ / macOS 13.3+ / tvOS 16.4+ / watchOS 9.4+
+-   Xcode 14.3.1+
+-   Swift 5.8+
 
 ## Installation
 
@@ -34,14 +34,14 @@ Once you have your Swift package set up, adding Alamofire as a dependency is as 
 
 ```swift
 dependencies: [
-.package(url: "https://github.com/DoubleNode/DNSCoreThreading.git", from: "1.10.1")
+.package(url: "https://github.com/DoubleNode/DNSCoreThreading.git", from: "1.11.0")
 ]
 ```
 
 ## Dependencies
 
 -   AtomicSwift v1.2.2+
--   DNSError v1.10.0+
+-   DNSError v1.11.0+
 
 ## Credits
 
