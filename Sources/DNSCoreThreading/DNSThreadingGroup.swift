@@ -70,8 +70,10 @@ public final class DNSThreadingGroup: @unchecked Sendable {
                           block: @escaping DNSThreadingGroupBlock,
                           then completionBlock: @escaping DNSCompletionBlock) -> DNSThreadingGroup {
         let threadingGroup = DNSThreadingGroup(name)
-        Task { @MainActor in
-            threadingGroup.run(block: {
+        
+        // Use modern async pattern instead of Task for better Swift 6 compatibility
+        Task.detached {
+            await threadingGroup.runAsync(block: {
                 threadingGroup.run(DNSLowThread(.asynchronously) { thread in
                     block(threadingGroup)
                     thread.done()
@@ -87,8 +89,9 @@ public final class DNSThreadingGroup: @unchecked Sendable {
                           with timeout: DispatchTime,
                           then completionBlock: @escaping DNSCompletionBlock) -> DNSThreadingGroup {
         let threadingGroup = DNSThreadingGroup(name)
-        Task { @MainActor in
-            threadingGroup.run(block: {
+        
+        Task.detached {
+            await threadingGroup.runAsync(block: {
                 block(threadingGroup)
             }, with: timeout, then: completionBlock)
         }
@@ -106,24 +109,43 @@ public final class DNSThreadingGroup: @unchecked Sendable {
 
     public func run(block: @escaping @Sendable () -> Void,
                     then completionBlock: @escaping DNSCompletionBlock) {
-        Task { @MainActor in
-            self.run(block: block, with: DispatchTime.distantFuture, then: completionBlock)
+        Task.detached {
+            await self.runAsync(block: block, with: DispatchTime.distantFuture, then: completionBlock)
         }
     }
 
     public func run(block: @escaping @Sendable () -> Void,
                     with timeout: DispatchTime,
                     then completionBlock: @escaping DNSCompletionBlock) {
-        DNSThreadingHelper.shared.run(with: timeout, block: { (group: DispatchGroup) in
-            self.group = group
-            self.threads = []
-            block()
+        Task.detached {
+            await self.runAsync(block: block, with: timeout, then: completionBlock)
+        }
+    }
+    
+    // Internal async method for proper Swift 6 concurrency
+    private func runAsync(block: @escaping @Sendable () -> Void,
+                         then completionBlock: @escaping DNSCompletionBlock) async {
+        await runAsync(block: block, with: DispatchTime.distantFuture, then: completionBlock)
+    }
+    
+    private func runAsync(block: @escaping @Sendable () -> Void,
+                         with timeout: DispatchTime,
+                         then completionBlock: @escaping DNSCompletionBlock) async {
+        await withCheckedContinuation { continuation in
+            DNSThreadingHelper.shared.run(with: timeout, block: { (group: DispatchGroup) in
+                self.group = group
+                self.threadsLock.withLock { $0.removeAll() }
+                block()
 
-            let currentThreads = self.threadsLock.withLock { $0 }
-            for thread in currentThreads {
-                thread.run(in: self)
-            }
-        }, then: completionBlock)
+                let currentThreads = self.threadsLock.withLock { $0 }
+                for thread in currentThreads {
+                    thread.run(in: self)
+                }
+            }, then: { error in
+                completionBlock(error)
+                continuation.resume()
+            })
+        }
     }
 
     public func startThread() {

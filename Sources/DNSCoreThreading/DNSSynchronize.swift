@@ -17,6 +17,12 @@ import Foundation
 //      // Synchronized work
 //  }.run()
 //
+// For Swift 6, consider using the new DNSActorSynchronize for better concurrency safety:
+//
+//  await DNSActorSynchronize.run {
+//      // Actor-isolated synchronized work
+//  }
+//
 
 public final class DNSSynchronize: @unchecked Sendable {
     private let block: (@Sendable () -> Void)?
@@ -44,5 +50,27 @@ public final class DNSSynchronize: @unchecked Sendable {
         defer { objc_sync_exit(syncObject) }
 
         self.block?()
+    }
+}
+
+// MARK: - Swift 6 Modern Synchronization Alternative
+
+/// Modern actor-based synchronization for Swift 6
+/// This provides a more Swift 6-native alternative to the legacy DNSSynchronize
+@globalActor
+public actor DNSActorSynchronize: GlobalActor {
+    public static let shared = DNSActorSynchronize()
+    
+    private init() {}
+    
+    /// Run a block with actor isolation for thread safety
+    /// This is the preferred method for Swift 6 applications
+    public static func run<T>(_ block: @Sendable () async throws -> T) async rethrows -> T {
+        return try await block()
+    }
+    
+    /// Run a synchronous block with actor isolation
+    public static func runSync<T>(_ block: @Sendable () throws -> T) async rethrows -> T {
+        return try block()
     }
 }

@@ -23,30 +23,31 @@ import Foundation
 public typealias DNSThreadingQueueBlock = @Sendable (DNSThreadingQueue) -> Void
 
 public class DNSThreadingQueue: @unchecked Sendable, Equatable {
-    public nonisolated(unsafe) static var currentQueue: DNSThreadingQueue {
+    // Thread-safe static property access for Swift 6
+    public static var currentQueue: DNSThreadingQueue {
         guard let queue = OperationQueue.current?.underlyingQueue else {
             return defaultQueue
         }
         return DNSThreadingQueue(with: queue)
     }
     
-    public nonisolated(unsafe) static var defaultQueue: DNSThreadingQueue {
+    public static var defaultQueue: DNSThreadingQueue {
         return DNSThreadingQueue(with: DispatchQueue.global(qos: .default))
     }
     
-    public nonisolated(unsafe) static var backgroundQueue: DNSThreadingQueue {
+    public static var backgroundQueue: DNSThreadingQueue {
         return DNSThreadingQueue(with: DispatchQueue.global(qos: .utility))
     }
     
-    public nonisolated(unsafe) static var highBackgroundQueue: DNSThreadingQueue {
+    public static var highBackgroundQueue: DNSThreadingQueue {
         return DNSThreadingQueue(with: DispatchQueue.global(qos: .userInitiated))
     }
     
-    public nonisolated(unsafe) static var lowBackgroundQueue: DNSThreadingQueue {
+    public static var lowBackgroundQueue: DNSThreadingQueue {
         return DNSThreadingQueue(with: DispatchQueue.global(qos: .background))
     }
     
-    public nonisolated(unsafe) static var uiMainQueue: DNSThreadingQueue {
+    public static var uiMainQueue: DNSThreadingQueue {
         return DNSThreadingQueue(with: DispatchQueue.main)
     }
 
