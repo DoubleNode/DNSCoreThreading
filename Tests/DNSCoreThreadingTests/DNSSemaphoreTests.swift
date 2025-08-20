@@ -10,13 +10,14 @@ import XCTest
 
 @testable import DNSCoreThreading
 
-class DNSSemaphoreTests: XCTestCase {
+final class DNSSemaphoreTests: XCTestCase {
     private var sut: DNSSemaphore!
 
     override func setUp() {
         super.setUp()
         sut = DNSSemaphore()
     }
+    
     override func tearDown() {
         sut = nil
         super.tearDown()

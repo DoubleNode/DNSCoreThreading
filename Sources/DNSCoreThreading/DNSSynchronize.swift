@@ -13,30 +13,35 @@ import Foundation
 //
 // Example Code:
 //
-//  DNSSynchronize.init(with: self, andRun: {
-//      () in
-//  }).run()
+//  DNSSynchronize(with: self) {
+//      // Synchronized work
+//  }.run()
 //
 
-public class DNSSynchronize {
-    var block:  DNSBlock?
-    var object: Any?
+public final class DNSSynchronize: @unchecked Sendable {
+    private let block: (@Sendable () -> Void)?
+    private let object: AnyObject?
 
-    required public init(with object: Any? = nil, andRun block: DNSBlock? = nil) {
+    public init(with object: AnyObject? = nil, andRun block: (@Sendable () -> Void)? = nil) {
         self.object = object
-        self.block  = block
+        self.block = block
     }
 
     public func run() {
+        // Note: In Swift 6, we should prefer actor-based synchronization over objc_sync
+        // This implementation maintains compatibility but should be migrated to actors long-term
+        
         if Thread.isMainThread {
             let codeLocation = DNSCoreThreadingCodeLocation(self, "\(#file),\(#line),\(#function)")
-            NSException.init(name: NSExceptionName("\(type(of: self)) Exception"),
-                             reason: "In Main Thread", userInfo: codeLocation.userInfo)
+            NSException(name: NSExceptionName("\(type(of: self)) Exception"),
+                       reason: "In Main Thread",
+                       userInfo: codeLocation.userInfo)
                 .raise()
         }
 
-        objc_sync_enter(self.object ?? self)
-        defer { objc_sync_exit(self.object ?? self) }
+        let syncObject = self.object ?? self
+        objc_sync_enter(syncObject)
+        defer { objc_sync_exit(syncObject) }
 
         self.block?()
     }

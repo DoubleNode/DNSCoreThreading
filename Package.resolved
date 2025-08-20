@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/DoubleNode/DNSError.git",
       "state" : {
-        "revision" : "d9040c8ced0e3f3166c0554be101342c5d9021c6",
-        "version" : "1.11.1"
+        "revision" : "bd897e3ea506e1486dfe9512518a112e6a55f1cc",
+        "version" : "2.0.0"
       }
     },
     {

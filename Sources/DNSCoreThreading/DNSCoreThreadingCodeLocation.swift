@@ -11,6 +11,7 @@ import DNSError
 public extension DNSCodeLocation {
     typealias coreThreading = DNSCoreThreadingCodeLocation
 }
-open class DNSCoreThreadingCodeLocation: DNSCodeLocation {
+
+open class DNSCoreThreadingCodeLocation: DNSCodeLocation, @unchecked Sendable {
     override open class var domainPreface: String { "com.doublenode.coreThreading." }
 }

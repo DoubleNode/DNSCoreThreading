@@ -8,11 +8,12 @@
 
 import DNSError
 import Foundation
+import os.lock
 
-public typealias DNSCompletionBlock = (DNSError?) -> Void
-public typealias DNSThreadingGroupBlock = (DNSThreadingGroup) -> Void
+public typealias DNSCompletionBlock = @Sendable ((any DNSError)?) -> Void
+public typealias DNSThreadingGroupBlock = @Sendable (DNSThreadingGroup) -> Void
 
-public protocol DNSThreadingGroupProtocol: AnyObject {
+public protocol DNSThreadingGroupProtocol: AnyObject, Sendable {
     func run(in group: DNSThreadingGroup)
     func done()
 }
@@ -22,52 +23,26 @@ public protocol DNSThreadingGroupProtocol: AnyObject {
 //
 // Example Code:
 //
-//  DNSThread* thread1 = [DNSThread create:
-//   ^(DNSThread* thread)
-//   {
-//       // Do background work here
-//       [thread done];
-//   }];
+//  let thread1 = DNSThread(.asynchronously) { thread in
+//      // Do background work here
+//      thread.done()
+//  }
 //
-//  DNSThread* thread2 = [DNSThread create:
-//   ^(DNSThread* thread)
-//   {
-//       // Do background work here
-//       [thread done];
-//   }];
+//  let thread2 = DNSThread(.asynchronously) { thread in
+//      // Do background work here
+//      thread.done()
+//  }
 //
-//  DNSThread* thread3 = [DNSThread create:
-//   ^(DNSThread* thread)
-//   {
-//       // Do background work here
-//       [thread done];
-//   }];
-//
-//  DNSThread* uiThread = [DNSThread create:
-//   ^(DNSThread* thread)
-//   {
-//       // Do main thread UI work here
-//       [thread done];
-//   }];
-//
-//  [DNSThreadingGroup run:
-//   ^(DNSThreadingGroup* threadingGroup)
-//   {
-//       [threadingGroup runThread:uiThread];
-//
-//       [threadingGroup runThread:thread1];
-//       [threadingGroup runThread:thread2];
-//       [threadingGroup runThread:thread3];
-//   }
-//               then:
-//   ^()
-//   {
-//       // This runs after all threads are "done" or after timeout
-//   }];
+//  DNSThreadingGroup.run { threadingGroup in
+//      threadingGroup.run(thread1)
+//      threadingGroup.run(thread2)
+//  } then: { error in
+//      // This runs after all threads are "done" or after timeout
+//  }
 //
 
-public class DNSThreadingGroup {
-    public var name: String = ""
+public final class DNSThreadingGroup: @unchecked Sendable {
+    public let name: String
 
     var count: Int {
         guard let group = self.group else { return -2 }
@@ -76,57 +51,77 @@ public class DNSThreadingGroup {
             .first?.components(separatedBy: CharacterSet.decimalDigits.inverted)
             .compactMap{Int($0)}.first ?? -1
     }
-    var group: DispatchGroup?
-    var threads: [DNSThreadingGroupProtocol] = []
+    
+    private let groupLock = OSAllocatedUnfairLock<DispatchGroup?>(initialState: nil)
+    private let threadsLock = OSAllocatedUnfairLock<[any DNSThreadingGroupProtocol]>(initialState: [])
+    
+    private var group: DispatchGroup? {
+        get { groupLock.withLock { $0 } }
+        set { groupLock.withLock { $0 = newValue } }
+    }
+    
+    private var threads: [any DNSThreadingGroupProtocol] {
+        get { threadsLock.withLock { $0 } }
+        set { threadsLock.withLock { $0 = newValue } }
+    }
 
     @discardableResult
-    class public func run(_ name: String = "",
+    public static func run(_ name: String = "",
                           block: @escaping DNSThreadingGroupBlock,
                           then completionBlock: @escaping DNSCompletionBlock) -> DNSThreadingGroup {
         let threadingGroup = DNSThreadingGroup(name)
-        threadingGroup.run(block: {
-            threadingGroup.run(DNSLowThread.init(.asynchronously) { (thread) in
+        Task { @MainActor in
+            threadingGroup.run(block: {
+                threadingGroup.run(DNSLowThread(.asynchronously) { thread in
+                    block(threadingGroup)
+                    thread.done()
+                })
+            }, then: completionBlock)
+        }
+        return threadingGroup
+    }
+    
+    @discardableResult
+    public static func run(_ name: String = "",
+                          block: @escaping DNSThreadingGroupBlock,
+                          with timeout: DispatchTime,
+                          then completionBlock: @escaping DNSCompletionBlock) -> DNSThreadingGroup {
+        let threadingGroup = DNSThreadingGroup(name)
+        Task { @MainActor in
+            threadingGroup.run(block: {
                 block(threadingGroup)
-                thread.done()
-            })
-        }, then: completionBlock)
-        return threadingGroup
-    }
-    @discardableResult
-    class public func run(_ name: String = "",
-                          block: @escaping DNSThreadingGroupBlock,
-                          with timeout:DispatchTime,
-                          then completionBlock: @escaping DNSCompletionBlock) -> DNSThreadingGroup {
-        let threadingGroup = DNSThreadingGroup(name)
-        threadingGroup.run(block: {
-            block(threadingGroup)
-        }, with: timeout, then: completionBlock)
+            }, with: timeout, then: completionBlock)
+        }
         return threadingGroup
     }
 
-    required init(_ name: String = "") {
+    public init(_ name: String = "") {
         self.name = name.isEmpty ? String.dnsRandom() : name
     }
-    public func run(_ thread: DNSThreadingGroupProtocol) {
+    
+    public func run(_ thread: any DNSThreadingGroupProtocol) {
         self.startThread()
-        self.threads.append(thread)
+        threadsLock.withLock { $0.append(thread) }
     }
 
-    public func run(block: @escaping DNSBlock,
+    public func run(block: @escaping @Sendable () -> Void,
                     then completionBlock: @escaping DNSCompletionBlock) {
-        self.run(block: block, with: DispatchTime.distantFuture, then: completionBlock)
+        Task { @MainActor in
+            self.run(block: block, with: DispatchTime.distantFuture, then: completionBlock)
+        }
     }
 
-    public func run(block: @escaping DNSBlock,
-                    with timeout:DispatchTime,
+    public func run(block: @escaping @Sendable () -> Void,
+                    with timeout: DispatchTime,
                     then completionBlock: @escaping DNSCompletionBlock) {
-        DNSThreadingHelper.shared.run(with:timeout, block: { (group: DispatchGroup) in
+        DNSThreadingHelper.shared.run(with: timeout, block: { (group: DispatchGroup) in
             self.group = group
             self.threads = []
             block()
 
-            for thread: DNSThreadingGroupProtocol in self.threads {
-                thread.run(in:self)
+            let currentThreads = self.threadsLock.withLock { $0 }
+            for thread in currentThreads {
+                thread.run(in: self)
             }
         }, then: completionBlock)
     }
@@ -135,6 +130,7 @@ public class DNSThreadingGroup {
         guard let group = self.group else { return }
         DNSThreadingHelper.shared.enter(group: group)
     }
+    
     public func completeThread() {
         guard let group = self.group else { return }
         DNSThreadingHelper.shared.leave(group: group)

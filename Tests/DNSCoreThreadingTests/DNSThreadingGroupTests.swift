@@ -10,13 +10,14 @@ import XCTest
 
 @testable import DNSCoreThreading
 
-class DNSThreadingGroupTests: XCTestCase {
+final class DNSThreadingGroupTests: XCTestCase {
     private var sut: DNSThreadingGroup!
 
     override func setUp() {
         super.setUp()
         sut = DNSThreadingGroup()
     }
+    
     override func tearDown() {
         sut = nil
         super.tearDown()

@@ -8,38 +8,35 @@
 
 import Foundation
 
-public typealias DNSBlock = () -> Void
-public typealias DNSStringBlock = (String) -> Void
-public typealias DNSStopBlock = (inout Bool) -> Void
-public typealias DNSThreadBlock = (DNSThread) -> Void
-public typealias DNSThreadStopBlock = (DNSThread, inout Bool) -> Void
-public typealias DNSUIThreadBlock = (DNSUIThread) -> Void
-public typealias DNSUIThreadStopBlock = (DNSUIThread, inout Bool) -> Void
+public typealias DNSBlock = @Sendable () -> Void
+public typealias DNSStringBlock = @Sendable (String) -> Void
+public typealias DNSStopBlock = @Sendable (inout Bool) -> Void
+public typealias DNSThreadBlock = @Sendable (DNSThread) -> Void
+public typealias DNSThreadStopBlock = @Sendable (DNSThread, inout Bool) -> Void
+public typealias DNSUIThreadBlock = @Sendable (DNSUIThread) -> Void
+public typealias DNSUIThreadStopBlock = @Sendable (DNSUIThread, inout Bool) -> Void
 
 //
-// DNCThread - run code on background thread
+// DNSThread - run code on background thread
 //
 // Example Code:
 //
-//  [DNCThread run:
-//   ^()
-//   {
-//   }];
+//  DNSThread.run {
+//      // Background work
+//  }
 //
 // or...
 //
-//  DNCThread* thread = [DNCThread create:
-//   ^(DNCThread* thread)
-//   {
-//   }];
-//
-//  [thread run];
+//  let thread = DNSThread(.asynchronously) { thread in
+//      // Background work
+//  }
+//  thread.run()
 //
 
-public class DNSThread: DNSThreadingGroupProtocol {
+public class DNSThread: DNSThreadingGroupProtocol, @unchecked Sendable {
     var block: DNSThreadBlock?
     var stopBlock: DNSThreadStopBlock?
-    var group: DNSThreadingGroup?
+    weak var group: DNSThreadingGroup?
 
     var execute: DNSThreading.Execution = .asynchronously
     var qos: DNSThreading.QoSClass = .background
@@ -48,14 +45,14 @@ public class DNSThread: DNSThreadingGroupProtocol {
     open class func run(_ execute: DNSThreading.Execution = .asynchronously,
                         in qos: DNSThreading.QoSClass = .background,
                         block: @escaping DNSBlock) {
-        self.init(execute, in: qos, with: { (_) in block() }).run()
+        self.init(execute, in: qos, with: { _ in block() }).run()
     }
 
     @discardableResult
     open class func run(in qos: DNSThreading.QoSClass = .background,
                         after delay: Double,
                         block: @escaping DNSBlock) -> Timer? {
-        return self.init(.asynchronously, in: qos, with: { (_) in
+        return self.init(.asynchronously, in: qos, with: { _ in
             block()
         }).run(after: delay)
     }
@@ -114,7 +111,7 @@ public class DNSThread: DNSThreadingGroupProtocol {
     @discardableResult
     public func runRepeatedly(after delay: Double) -> Timer? {
         self.timer = DNSThreadingHelper.shared
-            .runRepeatedly(in: self.qos, after: delay) { (stop) in
+            .runRepeatedly(in: self.qos, after: delay) { stop in
             self.stopBlock?(self, &stop) ?? self.block?(self)
         }
         return self.timer
@@ -133,24 +130,24 @@ public class DNSThread: DNSThreadingGroupProtocol {
     }
 
     public func done() {
-        guard group != nil else { return }
-        group?.completeThread()
-        group = nil
+        guard let group = group else { return }
+        group.completeThread()
+        self.group = nil
     }
 }
 
-public class DNSHighThread: DNSThread {
+public class DNSHighThread: DNSThread, @unchecked Sendable {
     override public class func run(_ execute: DNSThreading.Execution = .asynchronously,
                                    in qos: DNSThreading.QoSClass = .highBackground,
                                    block: @escaping DNSBlock) {
-        self.init(execute, in: qos, with: { (_) in block() }).run()
+        self.init(execute, in: qos, with: { _ in block() }).run()
     }
 
     @discardableResult
     override public class func run(in qos: DNSThreading.QoSClass = .highBackground,
                                    after delay: Double,
                                    block: @escaping DNSBlock) -> Timer? {
-        return self.init(.asynchronously, in: qos, with: { (_) in
+        return self.init(.asynchronously, in: qos, with: { _ in
             block()
         }).run(after: delay)
     }
@@ -177,18 +174,18 @@ public class DNSHighThread: DNSThread {
     }
 }
 
-public class DNSLowThread: DNSThread {
+public class DNSLowThread: DNSThread, @unchecked Sendable {
     override public class func run(_ execute: DNSThreading.Execution = .asynchronously,
                                    in qos: DNSThreading.QoSClass = .lowBackground,
                                    block: @escaping DNSBlock) {
-        self.init(execute, in: qos, with: { (_) in block() }).run()
+        self.init(execute, in: qos, with: { _ in block() }).run()
     }
 
     @discardableResult
     override public class func run(in qos: DNSThreading.QoSClass = .lowBackground,
                                    after delay: Double,
                                    block: @escaping DNSBlock) -> Timer? {
-        return self.init(.asynchronously, in: qos, with: { (_) in
+        return self.init(.asynchronously, in: qos, with: { _ in
             block()
         }).run(after: delay)
     }
@@ -215,18 +212,19 @@ public class DNSLowThread: DNSThread {
     }
 }
 
-public class DNSUIThread: DNSThread {
+@MainActor
+public class DNSUIThread: DNSThread, @unchecked Sendable {
     override public class func run(_ execute: DNSThreading.Execution = .synchronously,
                                    in qos: DNSThreading.QoSClass = .uiMain,
                                    block: @escaping DNSBlock) {
-        self.init(execute, in: qos, with: { (_) in block() }).run()
+        self.init(execute, in: qos, with: { _ in block() }).run()
     }
 
     @discardableResult
     override public class func run(in qos: DNSThreading.QoSClass = .uiMain,
                                    after delay: Double,
                                    block: @escaping DNSBlock) -> Timer? {
-        return self.init(.synchronously, in: qos, with: { (_) in
+        return self.init(.synchronously, in: qos, with: { _ in
             block()
         }).run(after: delay)
     }

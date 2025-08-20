@@ -10,13 +10,14 @@ import XCTest
 
 @testable import DNSCoreThreading
 
-class DNSSynchronizeTests: XCTestCase {
+final class DNSSynchronizeTests: XCTestCase {
     private var sut: DNSSynchronize!
 
     override func setUp() {
         super.setUp()
         sut = DNSSynchronize()
     }
+    
     override func tearDown() {
         sut = nil
         super.tearDown()

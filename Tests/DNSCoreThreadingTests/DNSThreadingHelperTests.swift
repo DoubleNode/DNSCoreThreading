@@ -7,16 +7,18 @@
 //
 
 import XCTest
+import os.lock
 
 @testable import DNSCoreThreading
 
-class DNSThreadingHelperTests: XCTestCase {
+final class DNSThreadingHelperTests: XCTestCase {
     private var sut: DNSThreadingHelper!
 
     override func setUp() {
         super.setUp()
         sut = DNSThreadingHelper.shared
     }
+    
     override func tearDown() {
         sut = nil
         super.tearDown()
@@ -24,16 +26,15 @@ class DNSThreadingHelperTests: XCTestCase {
 
     func test_run_withAsynchronouslyInBackgroundAndBlock_shouldExecuteImmediatelyInSeparateThread() {
         let threadExecuted = expectation(description: "Thread executes")
-        let currentThread = Thread.current
-        var testThread: Thread?
+        let currentThreadName = Thread.current.name
 
         sut.run(.asynchronously, in: .highBackground) {
-            testThread = Thread.current
+            let executingThreadName = Thread.current.name
+            XCTAssertNotEqual(currentThreadName, executingThreadName)
             threadExecuted.fulfill()
         }
 
         wait(for: [threadExecuted], timeout: 0.1)
-        XCTAssertNotEqual(currentThread, testThread)
     }
 
     func test_run_withSynchronouslyInBackgroundAndBlock_shouldExecuteImmediately() {
@@ -69,11 +70,15 @@ class DNSThreadingHelperTests: XCTestCase {
 
     func test_runRepeatedly_withInBackgroundAfterDelayAndBlock_shouldExecuteAfterDelay4Times() {
         let threadExecuted = expectation(description: "Thread executes")
-        var testCount = 0
+        let testCount = OSAllocatedUnfairLock(initialState: 0)
 
-        _ = sut.runRepeatedly(in: .highBackground, after: 0.2) { (stop) in
-            testCount += 1
-            guard testCount < 4 else {
+        _ = sut.runRepeatedly(in: .highBackground, after: 0.2) { stop in
+            let currentCount = testCount.withLock { count in
+                count += 1
+                return count
+            }
+            
+            guard currentCount < 4 else {
                 stop = true
                 threadExecuted.fulfill()
                 return
@@ -81,18 +86,22 @@ class DNSThreadingHelperTests: XCTestCase {
         }
 
         wait(for: [threadExecuted], timeout: 1.0)
-        XCTAssertEqual(testCount, 4)
+        let finalCount = testCount.withLock { $0 }
+        XCTAssertEqual(finalCount, 4)
     }
 
     func test_runRepeatedly_withInBackgroundAfterDelayAndBlock_shouldNotExecute4TimesBeforeDelay() {
         let threadExecuted = expectation(description: "Thread executes")
         threadExecuted.isInverted = true
+        let testCount = OSAllocatedUnfairLock(initialState: 0)
 
-        var testCount = 0
-
-        _ = sut.runRepeatedly(in: .highBackground, after: 0.2) { (stop) in
-            testCount += 1
-            guard testCount < 4 else {
+        _ = sut.runRepeatedly(in: .highBackground, after: 0.2) { stop in
+            let currentCount = testCount.withLock { count in
+                count += 1
+                return count
+            }
+            
+            guard currentCount < 4 else {
                 stop = true
                 threadExecuted.fulfill()
                 return
@@ -100,6 +109,7 @@ class DNSThreadingHelperTests: XCTestCase {
         }
 
         wait(for: [threadExecuted], timeout: 0.7)
-        XCTAssertEqual(testCount, 3)
+        let finalCount = testCount.withLock { $0 }
+        XCTAssertEqual(finalCount, 3)
     }
 }

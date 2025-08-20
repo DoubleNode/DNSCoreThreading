@@ -12,13 +12,14 @@ import Foundation
 public extension DNSError {
     typealias CoreThreading = DNSCoreThreadingError
 }
+
 public enum DNSCoreThreadingError: DNSError {
     // Common Errors
     case unknown(_ codeLocation: DNSCodeLocation)
     case notImplemented(_ codeLocation: DNSCodeLocation)
     case notFound(field: String, value: String, _ codeLocation: DNSCodeLocation)
     case invalidParameters(parameters: [String], _ codeLocation: DNSCodeLocation)
-    case lowerError(error: Error, _ codeLocation: DNSCodeLocation)
+    case lowerError(error: any Error, _ codeLocation: DNSCodeLocation)
     // Domain-Specific Errors
     case groupTimeout(_ codeLocation: DNSCodeLocation)
 
