@@ -29,15 +29,24 @@ public enum DNSThreading {
     }
 }
 
-final class DNSThreadingHelper: @unchecked Sendable {
+final class DNSThreadingHelper: Sendable {
     static let shared = DNSThreadingHelper()
 
-    private let queuesLock = OSAllocatedUnfairLock(initialState: [String: DispatchQueue]())
+    // Thread-safe queue management
+    private let queuesLock = OSAllocatedUnfairLock(initialState: [String: QueueInfo]())
     private let threadIndexLock = OSAllocatedUnfairLock(initialState: 0)
     
-    private var queues: [String: DispatchQueue] {
-        get { queuesLock.withLock { $0 } }
-        set { queuesLock.withLock { $0 = newValue } }
+    // Store queue info to track attributes
+    private struct QueueInfo: Sendable {
+        let queue: DispatchQueue
+        let attributes: DispatchQueue.Attributes
+        let label: String
+        
+        init(queue: DispatchQueue, attributes: DispatchQueue.Attributes, label: String) {
+            self.queue = queue
+            self.attributes = attributes
+            self.label = label
+        }
     }
     
     private var threadIndex: Int {
@@ -90,7 +99,6 @@ final class DNSThreadingHelper: @unchecked Sendable {
                 if Thread.current.name?.isEmpty ?? true {
                     Thread.current.name = asyncName
                 }
-                Thread.current.name = asyncName
                 block?()
             }
         }
@@ -158,19 +166,48 @@ final class DNSThreadingHelper: @unchecked Sendable {
         group.leave()
     }
 
-    // MARK: - thread queuing methods
+    // MARK: - thread queuing methods - FIXED VERSION
 
     func queue(for label: String,
                with attributes: DispatchQueue.Attributes? = .concurrent) -> DispatchQueue {
+        let requestedAttributes = attributes ?? .concurrent
+        
         return queuesLock.withLock { queues in
-            if let existingQueue = queues[label] {
-                return existingQueue
+            // Check if we have an existing queue with matching attributes
+            if let existingQueueInfo = queues[label] {
+                // Verify attributes match - if not, create a new queue
+                if existingQueueInfo.attributes == requestedAttributes {
+                    return existingQueueInfo.queue
+                } else {
+                    // Remove old queue and create new one with correct attributes
+                    let newQueue = DispatchQueue(
+                        label: label,
+                        attributes: requestedAttributes,
+                        autoreleaseFrequency: .workItem
+                    )
+                    let newQueueInfo = QueueInfo(
+                        queue: newQueue,
+                        attributes: requestedAttributes,
+                        label: label
+                    )
+                    queues[label] = newQueueInfo
+                    return newQueue
+                }
+            } else {
+                // Create new queue
+                let newQueue = DispatchQueue(
+                    label: label,
+                    attributes: requestedAttributes,
+                    autoreleaseFrequency: .workItem
+                )
+                let newQueueInfo = QueueInfo(
+                    queue: newQueue,
+                    attributes: requestedAttributes,
+                    label: label
+                )
+                queues[label] = newQueueInfo
+                return newQueue
             }
-            let newQueue = DispatchQueue(label: label,
-                                       attributes: attributes ?? .concurrent,
-                                       autoreleaseFrequency: .workItem)
-            queues[label] = newQueue
-            return newQueue
         }
     }
 
@@ -183,4 +220,26 @@ final class DNSThreadingHelper: @unchecked Sendable {
                  runSynchronous block: @escaping @Sendable () -> Void) {
         self.queue(for: label).sync(execute: block)
     }
+    
+    // MARK: - Debug and Testing Methods
+    
+    #if DEBUG
+    /// Clear all cached queues - useful for testing
+    func clearQueueCache() {
+        queuesLock.withLock { $0.removeAll() }
+    }
+    
+    /// Get current queue count for testing
+    func getCachedQueueCount() -> Int {
+        queuesLock.withLock { $0.count }
+    }
+    
+    /// Get queue info for debugging
+    func getQueueInfo(for label: String) -> (attributes: DispatchQueue.Attributes, label: String)? {
+        queuesLock.withLock { queues in
+            guard let queueInfo = queues[label] else { return nil }
+            return (attributes: queueInfo.attributes, label: queueInfo.label)
+        }
+    }
+    #endif
 }

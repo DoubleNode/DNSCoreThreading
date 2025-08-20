@@ -1,4 +1,5 @@
 {
+  "originHash" : "9d7af61b32dbcd6770b6ac07fcc81d80f4dd7e525141d73567176508bc4843f8",
   "pins" : [
     {
       "identity" : "atomicswift",
@@ -14,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/DoubleNode/DNSError.git",
       "state" : {
-        "revision" : "bd897e3ea506e1486dfe9512518a112e6a55f1cc",
-        "version" : "2.0.0"
+        "revision" : "cf6f8820c3f61d42d796d466eaa896c78d6361e0",
+        "version" : "2.0.1"
       }
     },
     {
@@ -28,5 +29,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }
