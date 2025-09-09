@@ -172,4 +172,131 @@ class DNSThreadingHelper {
                  runSynchronous block:@escaping DNSBlock) {
         self.queue(for:label).sync(execute: block)
     }
+    
+    // MARK: - Async/Await Bridge Methods
+    
+    /// Run async operation with DNSThreading compatibility
+    func runAsync<T>(_ execution: DNSThreading.Execution = .asynchronously,
+                     in qos: DNSThreading.QoSClass = .current,
+                     operation: @escaping () async throws -> T) async throws -> T {
+        let priority = qos.taskPriority
+        
+        return try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask(priority: priority) {
+                try await operation()
+            }
+            return try await group.next()!
+        }
+    }
+    
+    /// Bridge async operation to legacy completion pattern
+    func bridgeAsync<T>(
+        _ execution: DNSThreading.Execution = .asynchronously,
+        in qos: DNSThreading.QoSClass = .current,
+        operation: @escaping () async throws -> T,
+        completion: @escaping (Result<T, Error>) -> Void
+    ) {
+        Task(priority: qos.taskPriority) {
+            do {
+                let result = try await operation()
+                completion(.success(result))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// Run async operation after delay
+    func runAsync<T>(in qos: DNSThreading.QoSClass = .current,
+                     after delay: TimeInterval,
+                     operation: @escaping () async throws -> T) async throws -> T {
+        let priority = qos.taskPriority
+        
+        return try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask(priority: priority) {
+                try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                return try await operation()
+            }
+            return try await group.next()!
+        }
+    }
+    
+    /// Replace DNSThreadingGroup with async TaskGroup
+    func runGroup<T>(operations: [() async throws -> T],
+                     in qos: DNSThreading.QoSClass = .background,
+                     timeout: TimeInterval? = nil) async throws -> [T] {
+        let priority = qos.taskPriority
+        
+        if let timeout = timeout {
+            return try await withTimeout(seconds: timeout) {
+                try await withThrowingTaskGroup(of: T.self, returning: [T].self) { group in
+                    for operation in operations {
+                        group.addTask(priority: priority) {
+                            try await operation()
+                        }
+                    }
+                    
+                    var results: [T] = []
+                    for try await result in group {
+                        results.append(result)
+                    }
+                    return results
+                }
+            }
+        } else {
+            return try await withThrowingTaskGroup(of: T.self, returning: [T].self) { group in
+                for operation in operations {
+                    group.addTask(priority: priority) {
+                        try await operation()
+                    }
+                }
+                
+                var results: [T] = []
+                for try await result in group {
+                    results.append(result)
+                }
+                return results
+            }
+        }
+    }
+    
+    /// Timeout wrapper for async operations
+    private func withTimeout<T>(
+        seconds: TimeInterval,
+        operation: @escaping () async throws -> T
+    ) async throws -> T {
+        return try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask {
+                try await operation()
+            }
+            
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                throw DNSError.CoreThreading.groupTimeout(.coreThreading(self))
+            }
+            
+            defer { group.cancelAll() }
+            return try await group.next()!
+        }
+    }
+}
+
+// MARK: - Extensions for async/await compatibility
+
+extension DNSThreading.QoSClass {
+    /// Convert DNSThreading QoS to TaskPriority
+    var taskPriority: TaskPriority {
+        switch self {
+        case .background, .lowBackground:
+            return .background
+        case .default:
+            return .medium
+        case .highBackground:
+            return .high
+        case .uiMain:
+            return .userInitiated
+        case .current:
+            return .medium
+        }
+    }
 }
